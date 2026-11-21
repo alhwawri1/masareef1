@@ -1,0 +1,56 @@
+name: Build Unsigned iOS IPA
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  build-ipa:
+    name: Build Masareef IPA
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Capacitor Dependencies
+        run: npm install
+
+      - name: Generate & Sync iOS Project
+        run: |
+          if [ ! -d "ios" ]; then
+            npx cap add ios
+          fi
+          npx cap sync ios
+
+      - name: Configure iOS Info.plist & Deployment Target
+        run: |
+          PLIST="ios/App/App/Info.plist"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName Masareef" "$PLIST" || true
+          /usr/libexec/PlistBuddy -c "Add :UIRequiresFullScreen bool true" "$PLIST" || true
+
+      - name: Build & Archive Unsigned App
+        run: |
+          cd ios/App
+          xcodebuild             -project App.xcodeproj             -scheme App             -configuration Release             -sdk iphoneos             -archivePath ../../build/Masareef.xcarchive             CODE_SIGN_IDENTITY=""             CODE_SIGNING_REQUIRED=NO             CODE_SIGNING_ALLOWED=NO             AD_HOC_CODE_SIGNING_ALLOWED=YES             archive
+
+      - name: Package Unsigned IPA
+        run: |
+          mkdir -p build/Payload
+          cp -r build/Masareef.xcarchive/Products/Applications/App.app build/Payload/
+          cd build
+          zip -r -y Masareef-unsigned.ipa Payload
+          ls -lh Masareef-unsigned.ipa
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Masareef-unsigned-ipa
+          path: build/Masareef-unsigned.ipa
+          retention-days: 30
