@@ -1,0 +1,17 @@
+{
+  "name": "masareef-app",
+  "version": "1.0.0",
+  "description": "Masareef - Expense Tracker & Smart Checklist (Offline iOS App)",
+  "main": "www/index.html",
+  "scripts": {
+    "cap:add:ios": "cap add ios",
+    "cap:sync": "cap sync ios"
+  },
+  "dependencies": {
+    "@capacitor/core": "^6.1.2",
+    "@capacitor/ios": "^6.1.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.1.2"
+  }
+}
